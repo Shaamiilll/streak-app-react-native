@@ -1,98 +1,213 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState, useCallback } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View, Alert } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { StreakCard } from '@/components/streak-card';
+import { AddStreakModal } from '@/components/add-streak-modal';
+import { useStreaks } from '@/hooks/use-streaks';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { streaks, isLoading, createStreak, completeStreak, deleteStreak, loadStreaks } =
+    useStreaks();
+  const [modalVisible, setModalVisible] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+  useFocusEffect(
+    useCallback(() => {
+      loadStreaks();
+    }, [])
+  );
+
+  const handleCompleteStreak = (streakId: string) => {
+    completeStreak(streakId);
+  };
+
+  const handleAddStreak = async (name: string, description?: string) => {
+    await createStreak(name, description);
+  };
+
+  const handleDeleteStreak = (streakId: string, streakName: string) => {
+    Alert.alert(
+      'Delete Streak',
+      `Are you sure you want to delete "${streakName}"?`,
+      [
+        { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+        {
+          text: 'Delete',
+          onPress: () => deleteStreak(streakId),
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
+  const isCompletedToday = (lastCompletedDate: string | null): boolean => {
+    if (!lastCompletedDate) return false;
+    const today = new Date().toISOString().split('T')[0];
+    const lastCompleted = lastCompletedDate.split('T')[0];
+    return today === lastCompleted;
+  };
+
+  const getTotalStats = () => {
+    return {
+      totalStreaks: streaks.length,
+      totalCompletions: streaks.reduce((sum, s) => sum + s.totalCompletions, 0),
+      maxStreak: Math.max(...streaks.map((s) => s.currentStreak), 0),
+    };
+  };
+
+  const stats = getTotalStats();
+
+  return (
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.title}>
+          My Streaks
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setModalVisible(true)}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {streaks.length > 0 && (
+        <View style={styles.statsBar}>
+          <View style={styles.statItem}>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>
+              {stats.totalStreaks}
+            </ThemedText>
+            <ThemedText type="default" style={styles.statLabel}>
+              Active
+            </ThemedText>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.statItem}>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>
+              {stats.totalCompletions}
+            </ThemedText>
+            <ThemedText type="default" style={styles.statLabel}>
+              Completed
+            </ThemedText>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.statItem}>
+            <ThemedText type="defaultSemiBold" style={styles.statValue}>
+              {stats.maxStreak}
+            </ThemedText>
+            <ThemedText type="default" style={styles.statLabel}>
+              Best Streak
+            </ThemedText>
+          </View>
+        </View>
+      )}
+
+      {isLoading ? (
+        <View style={styles.centerContent}>
+          <ThemedText>Loading...</ThemedText>
+        </View>
+      ) : streaks.length === 0 ? (
+        <View style={styles.centerContent}>
+          <MaterialCommunityIcons name="star-outline" size={48} color="#999" />
+          <ThemedText type="subtitle" style={styles.emptyText}>
+            No Streaks Yet
+          </ThemedText>
+          <ThemedText style={styles.emptyDescription}>
+            Create your first streak to get started!
+          </ThemedText>
+        </View>
+      ) : (
+        <FlatList
+          data={streaks}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <StreakCard
+              streak={item}
+              onPress={() => handleCompleteStreak(item.id)}
+              onDelete={() => handleDeleteStreak(item.id, item.name)}
+              isCompletedToday={isCompletedToday(item.lastCompletedDate)}
+            />
+          )}
+          scrollEnabled={false}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
+
+      <AddStreakModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onAdd={handleAddStreak}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  title: {
+    fontSize: 32,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statsBar: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginVertical: 12,
+    paddingVertical: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+  },
+  statLabel: {
+    fontSize: 12,
+    marginTop: 2,
+    opacity: 0.6,
+  },
+  divider: {
+    width: 1,
+    backgroundColor: '#ddd',
+    marginHorizontal: 8,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyText: {
+    marginTop: 16,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptyDescription: {
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  listContent: {
+    paddingBottom: 24,
   },
 });
