@@ -2,6 +2,7 @@ import { Streak } from '@/hooks/use-streaks';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { CalendarHeatmap } from './calendar-heatmap';
 import { ThemedText } from './themed-text';
 
 interface StreakCardProps {
@@ -17,6 +18,17 @@ export const StreakCard: React.FC<StreakCardProps> = ({
   onDelete,
   isCompletedToday,
 }) => {
+  const getCompletionPercentage = () => {
+    if (streak.frequencyPerWeek && streak.currentStreak > 0) {
+      const expectedCompletions = Math.floor((streak.currentStreak / 7) * streak.frequencyPerWeek);
+      if (expectedCompletions === 0) return 0;
+      return Math.min(100, Math.round((streak.totalCompletions / expectedCompletions) * 100));
+    }
+    return 0;
+  };
+
+  const completionPercentage = getCompletionPercentage();
+
   return (
     <View style={[styles.container, { borderLeftColor: streak.color }]}>
       <View style={styles.header}>
@@ -35,6 +47,16 @@ export const StreakCard: React.FC<StreakCardProps> = ({
         </TouchableOpacity>
       </View>
 
+      {(streak.goalValue || streak.frequencyPerWeek) && (
+        <View style={styles.goalSection}>
+          <ThemedText type="default" style={styles.goalText}>
+            {streak.goalValue && `Goal: ${streak.goalValue} ${streak.goalUnit || 'units'}`}
+            {streak.goalValue && streak.frequencyPerWeek && ' | '}
+            {streak.frequencyPerWeek && `${streak.frequencyPerWeek} days a week`}
+          </ThemedText>
+        </View>
+      )}
+
       <View style={styles.statsContainer}>
         <View style={styles.stat}>
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
@@ -46,10 +68,10 @@ export const StreakCard: React.FC<StreakCardProps> = ({
         </View>
         <View style={styles.stat}>
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
-            {streak.longestStreak}
+            {completionPercentage}%
           </ThemedText>
           <ThemedText type="default" style={styles.statLabel}>
-            Longest
+            Completed
           </ThemedText>
         </View>
         <View style={styles.stat}>
@@ -61,6 +83,11 @@ export const StreakCard: React.FC<StreakCardProps> = ({
           </ThemedText>
         </View>
       </View>
+
+      <CalendarHeatmap
+        completionHistory={streak.completionHistory || []}
+        color={streak.color}
+      />
 
       <TouchableOpacity
         style={[styles.button, isCompletedToday && styles.buttonCompleted]}
@@ -76,7 +103,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({
           type="defaultSemiBold"
           style={[styles.buttonText, isCompletedToday && styles.buttonTextCompleted]}
         >
-          {isCompletedToday ? 'Completed Today' : 'Complete Today'}
+          {isCompletedToday ? 'Done' : 'Complete Today'}
         </ThemedText>
       </TouchableOpacity>
     </View>
@@ -100,54 +127,63 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     flex: 1,
-    marginRight: 8,
   },
   title: {
     fontSize: 16,
   },
   description: {
-    fontSize: 12,
     marginTop: 4,
-    opacity: 0.7,
+    fontSize: 13,
+    color: '#666',
   },
   deleteButton: {
-    padding: 8,
+    padding: 4,
+  },
+  goalSection: {
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  goalText: {
+    fontSize: 13,
+    color: '#555',
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   stat: {
     alignItems: 'center',
+    flex: 1,
   },
   statValue: {
     fontSize: 18,
   },
   statLabel: {
-    fontSize: 11,
-    marginTop: 2,
-    opacity: 0.6,
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#007AFF',
     borderRadius: 8,
     paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   buttonCompleted: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e8f5e9',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
   },
   buttonTextCompleted: {
     color: '#4CAF50',

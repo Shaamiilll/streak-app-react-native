@@ -11,6 +11,10 @@ export interface Streak {
   createdDate: string;
   totalCompletions: number;
   color: string;
+  goalValue?: number;
+  goalUnit?: string;
+  frequencyPerWeek?: number;
+  completionHistory: string[]; // Array of ISO date strings when completed
 }
 
 const STORAGE_KEY = 'streaks_data';
@@ -47,7 +51,13 @@ export function useStreaks() {
     }
   };
 
-  const createStreak = async (name: string, description?: string) => {
+  const createStreak = async (
+    name: string,
+    description?: string,
+    goalValue?: number,
+    goalUnit?: string,
+    frequencyPerWeek?: number
+  ) => {
     const newStreak: Streak = {
       id: Date.now().toString(),
       name,
@@ -58,6 +68,10 @@ export function useStreaks() {
       createdDate: new Date().toISOString(),
       totalCompletions: 0,
       color: getRandomColor(),
+      goalValue,
+      goalUnit,
+      frequencyPerWeek,
+      completionHistory: [],
     };
     const updated = [...streaks, newStreak];
     await saveStreaks(updated);
@@ -68,6 +82,7 @@ export function useStreaks() {
     const updated = streaks.map((streak) => {
       if (streak.id === streakId) {
         const today = new Date().toISOString().split('T')[0];
+        const todayFull = new Date().toISOString();
         const lastCompleted = streak.lastCompletedDate?.split('T')[0];
         const isConsecutive = lastCompleted && isYesterday(lastCompleted, today);
         const isSameDay = lastCompleted === today;
@@ -76,6 +91,8 @@ export function useStreaks() {
           return streak; // Already completed today
         }
 
+        const newHistory = [...(streak.completionHistory || []), todayFull];
+
         return {
           ...streak,
           currentStreak: isConsecutive || !lastCompleted ? streak.currentStreak + 1 : 1,
@@ -83,8 +100,9 @@ export function useStreaks() {
             streak.longestStreak,
             isConsecutive || !lastCompleted ? streak.currentStreak + 1 : 1
           ),
-          lastCompletedDate: new Date().toISOString(),
+          lastCompletedDate: todayFull,
           totalCompletions: streak.totalCompletions + 1,
+          completionHistory: newHistory,
         };
       }
       return streak;
