@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Modal,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Platform,
-  KeyboardAvoidingView,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { ThemedText } from './themed-text';
 

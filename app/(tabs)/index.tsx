@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View, Alert } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { AddStreakModal } from '@/components/add-streak-modal';
+import { StreakCard } from '@/components/streak-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { StreakCard } from '@/components/streak-card';
-import { AddStreakModal } from '@/components/add-streak-modal';
 import { useStreaks } from '@/hooks/use-streaks';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';

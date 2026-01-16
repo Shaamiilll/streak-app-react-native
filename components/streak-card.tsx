@@ -1,8 +1,8 @@
+import { Streak } from '@/hooks/use-streaks';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from './themed-text';
-import { Streak } from '@/hooks/use-streaks';
 
 interface StreakCardProps {
   streak: Streak;
