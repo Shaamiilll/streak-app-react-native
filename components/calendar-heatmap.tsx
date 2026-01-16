@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useColorScheme } from 'react-native';
 
 interface CalendarHeatmapProps {
   completionHistory: string[];
@@ -7,6 +7,9 @@ interface CalendarHeatmapProps {
 }
 
 export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ completionHistory, color }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   // Get last 28 days
   const getLast28Days = () => {
     const days = [];
@@ -38,8 +41,12 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ completionHist
                 key={date}
                 style={[
                   styles.day,
-                  isCompleted && {
-                    backgroundColor: color,
+                  {
+                    backgroundColor: isCompleted
+                      ? color
+                      : isDark
+                      ? '#2c2c2c'
+                      : '#e8e8e8',
                   },
                 ]}
               />
@@ -63,7 +70,6 @@ const styles = StyleSheet.create({
   day: {
     flex: 1,
     aspectRatio: 1,
-    backgroundColor: '#2a2a2a',
     borderRadius: 4,
   },
 });

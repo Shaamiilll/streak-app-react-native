@@ -1,7 +1,8 @@
+import { Colors } from '@/constants/theme';
 import { Streak } from '@/hooks/use-streaks';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { CalendarHeatmap } from './calendar-heatmap';
 import { ThemedText } from './themed-text';
 
@@ -18,6 +19,10 @@ export const StreakCard: React.FC<StreakCardProps> = ({
   onDelete,
   isCompletedToday,
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme ?? 'light'];
+
   const getCompletionPercentage = () => {
     if (streak.frequencyPerWeek && streak.currentStreak > 0) {
       const expectedCompletions = Math.floor((streak.currentStreak / 7) * streak.frequencyPerWeek);
@@ -30,25 +35,47 @@ export const StreakCard: React.FC<StreakCardProps> = ({
   const completionPercentage = getCompletionPercentage();
 
   return (
-    <View style={[styles.container, { borderLeftColor: streak.color }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          borderLeftColor: streak.color,
+          backgroundColor: isDark ? '#1e1e1e' : '#f8f9fa',
+        },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.titleSection}>
           <ThemedText type="defaultSemiBold" style={styles.title}>
             {streak.name}
           </ThemedText>
           {streak.description && (
-            <ThemedText type="default" style={styles.description}>
+            <ThemedText
+              type="default"
+              style={[styles.description, { color: colors.subtitle }]}
+            >
               {streak.description}
             </ThemedText>
           )}
         </View>
         <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-          <MaterialCommunityIcons name="delete" size={20} color="#888" />
+          <MaterialCommunityIcons
+            name="delete"
+            size={20}
+            color={isDark ? '#757575' : '#999'}
+          />
         </TouchableOpacity>
       </View>
 
       {(streak.goalValue || streak.frequencyPerWeek) && (
-        <View style={styles.goalSection}>
+        <View
+          style={[
+            styles.goalSection,
+            {
+              backgroundColor: isDark ? '#2c2c2c' : '#f0f0f0',
+            },
+          ]}
+        >
           <ThemedText type="default" style={styles.goalText}>
             {streak.goalValue && `Goal: ${streak.goalValue} ${streak.goalUnit || 'units'}`}
             {streak.goalValue && streak.frequencyPerWeek && ' | '}
@@ -62,7 +89,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
             {streak.currentStreak}
           </ThemedText>
-          <ThemedText type="default" style={styles.statLabel}>
+          <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
             Current
           </ThemedText>
         </View>
@@ -70,7 +97,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
             {completionPercentage}%
           </ThemedText>
-          <ThemedText type="default" style={styles.statLabel}>
+          <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
             Completed
           </ThemedText>
         </View>
@@ -78,7 +105,7 @@ export const StreakCard: React.FC<StreakCardProps> = ({
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
             {streak.totalCompletions}
           </ThemedText>
-          <ThemedText type="default" style={styles.statLabel}>
+          <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
             Total
           </ThemedText>
         </View>
@@ -90,7 +117,16 @@ export const StreakCard: React.FC<StreakCardProps> = ({
       />
 
       <TouchableOpacity
-        style={[styles.button, isCompletedToday && styles.buttonCompleted]}
+        style={[
+          styles.button,
+          {
+            backgroundColor: isCompletedToday
+              ? isDark
+                ? '#1b5e20'
+                : '#e8f5e9'
+              : '#007AFF',
+          },
+        ]}
         onPress={onPress}
         disabled={isCompletedToday}
       >
@@ -101,7 +137,12 @@ export const StreakCard: React.FC<StreakCardProps> = ({
         />
         <ThemedText
           type="defaultSemiBold"
-          style={[styles.buttonText, isCompletedToday && styles.buttonTextCompleted]}
+          style={[
+            styles.buttonText,
+            {
+              color: isCompletedToday ? '#4CAF50' : '#fff',
+            },
+          ]}
         >
           {isCompletedToday ? 'Done' : 'Complete Today'}
         </ThemedText>
@@ -117,7 +158,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    backgroundColor: '#f9f9f9',
   },
   header: {
     flexDirection: 'row',
@@ -134,7 +174,6 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 4,
     fontSize: 13,
-    color: '#666',
   },
   deleteButton: {
     padding: 4,
@@ -143,12 +182,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#f0f0f0',
     borderRadius: 8,
   },
   goalText: {
     fontSize: 13,
-    color: '#555',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -164,11 +201,9 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#888',
     marginTop: 4,
   },
   button: {
-    backgroundColor: '#007AFF',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -177,15 +212,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  buttonCompleted: {
-    backgroundColor: '#e8f5e9',
-  },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  buttonTextCompleted: {
-    color: '#4CAF50',
   },
 });

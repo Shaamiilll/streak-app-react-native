@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 import { AddStreakModal } from '@/components/add-streak-modal';
 import { StreakCard } from '@/components/streak-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
 import { useStreaks } from '@/hooks/use-streaks';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -13,6 +14,9 @@ export default function HomeScreen() {
   const { streaks, isLoading, createStreak, completeStreak, deleteStreak, loadStreaks } =
     useStreaks();
   const [modalVisible, setModalVisible] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme ?? 'light'];
 
   useFocusEffect(
     useCallback(() => {
@@ -75,30 +79,52 @@ export default function HomeScreen() {
       </View>
 
       {streaks.length > 0 && (
-        <View style={styles.statsBar}>
+        <View
+          style={[
+            styles.statsBar,
+            {
+              backgroundColor: isDark ? '#1e1e1e' : '#f8f9fa',
+              borderColor: colors.border,
+            },
+          ]}
+        >
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statValue}>
               {stats.totalStreaks}
             </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
+            <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
               Active
             </ThemedText>
           </View>
-          <View style={styles.divider} />
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor: colors.border,
+              },
+            ]}
+          />
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statValue}>
               {stats.totalCompletions}
             </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
+            <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
               Completed
             </ThemedText>
           </View>
-          <View style={styles.divider} />
+          <View
+            style={[
+              styles.divider,
+              {
+                backgroundColor: colors.border,
+              },
+            ]}
+          />
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statValue}>
               {stats.maxStreak}
             </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
+            <ThemedText type="default" style={[styles.statLabel, { color: colors.subtitle }]}>
               Best Streak
             </ThemedText>
           </View>
@@ -111,11 +137,15 @@ export default function HomeScreen() {
         </View>
       ) : streaks.length === 0 ? (
         <View style={styles.centerContent}>
-          <MaterialCommunityIcons name="star-outline" size={48} color="#999" />
+          <MaterialCommunityIcons
+            name="star-outline"
+            size={48}
+            color={isDark ? '#555' : '#ccc'}
+          />
           <ThemedText type="subtitle" style={styles.emptyText}>
             No Streaks Yet
           </ThemedText>
-          <ThemedText style={styles.emptyDescription}>
+          <ThemedText style={[styles.emptyDescription, { color: colors.subtitle }]}>
             Create your first streak to get started!
           </ThemedText>
         </View>
@@ -173,8 +203,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 12,
     paddingVertical: 12,
-    backgroundColor: '#f0f0f0',
     borderRadius: 12,
+    borderWidth: 1,
   },
   statItem: {
     flex: 1,
@@ -186,11 +216,9 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     marginTop: 2,
-    opacity: 0.6,
   },
   divider: {
     width: 1,
-    backgroundColor: '#ddd',
     marginHorizontal: 8,
   },
   centerContent: {
@@ -205,7 +233,6 @@ const styles = StyleSheet.create({
   },
   emptyDescription: {
     textAlign: 'center',
-    opacity: 0.7,
   },
   listContent: {
     paddingBottom: 24,
